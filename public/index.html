@@ -18,8 +18,8 @@
         height: 100vh;
       }
       .cafe-img {
-        width: 30px;
-        height: 30px;
+        width: 26px;
+        height: auto;
       }
       .current-location {
         display: flex;
@@ -40,7 +40,7 @@
       // ################################
       // 최초 맵 세팅
       const mapOptions = {
-        center: new naver.maps.LatLng(37.3995704, 127.105399),
+        center: new naver.maps.LatLng(37.51, 127.04),
         zoom: 14, //지도의 초기 줌 레벨
         minZoom: 8, //지도의 최소 줌 레벨
         zoomControl: true, //줌 컨트롤의 표시 여부
@@ -54,6 +54,7 @@
 
       // ################################
       // html 마커 그리기
+      const markers = [];
       for (let i = 0; i < locations.length; i++) {
         const marker = new naver.maps.Marker({
           position: new naver.maps.LatLng(locations[i].lat, locations[i].lng),
@@ -86,6 +87,7 @@
           //   window.ReactNativeWebView.postMessage("clickModal");
           // }
         });
+        markers.push(marker);
       }
 
       // ################################
@@ -112,8 +114,34 @@
 
       // map 바뀌면 실행: 눌러서 이동하거나 크기 조절했을때
       naver.maps.Event.addListener(map, "idle", function () {
-        console.log("idle");
+        updateMarkers(map, markers);
       });
+      function updateMarkers(map, markers) {
+        const mapBounds = map.getBounds();
+        let marker;
+        let position;
+
+        for (let i = 0; i < markers.length; i++) {
+          marker = markers[i];
+          position = marker.getPosition();
+
+          if (mapBounds.hasLatLng(position)) {
+            showMarker(map, marker);
+          } else {
+            hideMarker(map, marker);
+          }
+        }
+      }
+
+      function showMarker(map, marker) {
+        if (marker.getMap()) return;
+        marker.setMap(map);
+      }
+
+      function hideMarker(map, marker) {
+        if (!marker.getMap()) return;
+        marker.setMap(null);
+      }
 
       // ################################
       // 앱으로부터 데이터 받아오기
