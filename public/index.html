@@ -82,10 +82,13 @@
             duration: 500,
           });
 
-          console.log(locations[i]);
-          // if (window.ReactNativeWebView) {
-          //   window.ReactNativeWebView.postMessage("clickModal");
-          // }
+          if (window.ReactNativeWebView) {
+            const data = JSON.stringify({
+              type: "clickMarker",
+              ...locations[i],
+            });
+            window.ReactNativeWebView.postMessage(data);
+          }
         });
         markers.push(marker);
       }
