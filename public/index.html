@@ -32,8 +32,15 @@
     </style>
   </head>
   <body>
-    <div id="map"></div>
+    <div id="map" onclick="closeModal()"></div>
 
+    <script>
+      function closeModal() {
+        if (window.ReactNativeWebView) {
+          window.ReactNativeWebView.postMessage("closeModal");
+        }
+      }
+    </script>
     <script type="module">
       import locations from "./data.js";
 
@@ -59,13 +66,13 @@
         const marker = new naver.maps.Marker({
           position: new naver.maps.LatLng(locations[i].lat, locations[i].lng),
           map: map,
-          title: locations[i].place,
+          title: locations[i].placeName,
           icon: {
             content: [
               '<div class="cs_mapbridge">',
               '<div class="map_group _map_group crs">',
               '<div class="map_marker _marker num1 num1_big"> ',
-              `<span class="ico _icon">${locations[i].place}</span>`,
+              `<span class="ico _icon">${locations[i].placeName}</span>`,
               '<span class="shd"></span>',
               "</div>",
               '<img class="cafe-img" src="img/cafe.svg" />',
@@ -78,9 +85,13 @@
         });
 
         naver.maps.Event.addListener(marker, "click", function (e) {
-          map.panTo(new naver.maps.LatLng(locations[i].lat, locations[i].lng), {
-            duration: 500,
-          });
+          event.stopPropagation();
+          map.panTo(
+            new naver.maps.LatLng(locations[i].lat - 0.005, locations[i].lng),
+            {
+              duration: 500,
+            },
+          );
 
           if (window.ReactNativeWebView) {
             const data = JSON.stringify({
