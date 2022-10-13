@@ -47,8 +47,8 @@
       // ################################
       // 최초 맵 세팅
       const mapOptions = {
-        center: new naver.maps.LatLng(37.51, 127.04),
-        zoom: 14, //지도의 초기 줌 레벨
+        center: new naver.maps.LatLng(37.497952, 127.027619),
+        zoom: 13, //지도의 초기 줌 레벨
         minZoom: 8, //지도의 최소 줌 레벨
         zoomControl: true, //줌 컨트롤의 표시 여부
         zoomControlOptions: {
@@ -165,7 +165,7 @@
           map.panTo(
             new naver.maps.LatLng(objData.latitude, objData.longitude),
             {
-              duration: 500,
+              duration: objData.duration,
             },
           );
           const marker = new naver.maps.Marker({
