@@ -8,8 +8,9 @@
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"
     />
     <title>map</title>
-
-    <style>
+    <script type="text/javascript" src="./js/MarkerClustering.js"></script>
+    <script type="text/javascript" src="./js/placeData.js"></script>
+    <style type="text/css">
       body {
         margin: 0;
       }
@@ -35,19 +36,14 @@
     <div id="map" onclick="closeModal()"></div>
 
     <script>
-      function closeModal() {
-        if (window.ReactNativeWebView) {
-          window.ReactNativeWebView.postMessage("closeModal");
-        }
-      }
-    </script>
-    <script type="module">
-      import locations from "./data.js";
-
       // ################################
       // 최초 맵 세팅
+      const urlParams = new URLSearchParams(location.search);
+      const lat = urlParams.get("lat");
+      const lng = urlParams.get("lng");
+
       const mapOptions = {
-        center: new naver.maps.LatLng(37.497952, 127.027619),
+        center: new naver.maps.LatLng(lat, lng),
         zoom: 13, //지도의 초기 줌 레벨
         minZoom: 8, //지도의 최소 줌 레벨
         zoomControl: true, //줌 컨트롤의 표시 여부
@@ -59,20 +55,26 @@
       };
       const map = new naver.maps.Map("map", mapOptions);
 
+      let currentMarker = new naver.maps.Marker({
+        position: new naver.maps.LatLng(lat, lng),
+        map: map,
+      });
+
       // ################################
       // html 마커 그리기
+      const placeData = locations;
       const markers = [];
-      for (let i = 0; i < locations.length; i++) {
+      for (let i = 0; i < placeData.length; i++) {
         const marker = new naver.maps.Marker({
-          position: new naver.maps.LatLng(locations[i].lat, locations[i].lng),
+          position: new naver.maps.LatLng(placeData[i].lat, placeData[i].lng),
           map: map,
-          title: locations[i].placeName,
+          title: placeData[i].placeName,
           icon: {
             content: [
               '<div class="cs_mapbridge">',
               '<div class="map_group _map_group crs">',
               '<div class="map_marker _marker num1 num1_big"> ',
-              `<span class="ico _icon">${locations[i].placeName}</span>`,
+              `<span class="ico _icon">${placeData[i].placeName}</span>`,
               '<span class="shd"></span>',
               "</div>",
               '<img class="cafe-img" src="img/cafe.svg" />',
@@ -87,7 +89,7 @@
         naver.maps.Event.addListener(marker, "click", function (e) {
           event.stopPropagation();
           map.panTo(
-            new naver.maps.LatLng(locations[i].lat - 0.005, locations[i].lng),
+            new naver.maps.LatLng(placeData[i].lat - 0.005, placeData[i].lng),
             {
               duration: 500,
             },
@@ -103,6 +105,60 @@
         });
         markers.push(marker);
       }
+
+      var htmlMarker1 = {
+          content:
+            '<div style="cursor:pointer;width:40px;height:40px;line-height:42px;font-size:10px;color:white;text-align:center;font-weight:bold;background:url(./img/cluster-marker-1.png);background-size:contain;"></div>',
+          size: N.Size(40, 40),
+          anchor: N.Point(20, 20),
+        },
+        htmlMarker2 = {
+          content:
+            '<div style="cursor:pointer;width:40px;height:40px;line-height:42px;font-size:10px;color:white;text-align:center;font-weight:bold;background:url(./img/cluster-marker-2.png);background-size:contain;"></div>',
+          size: N.Size(40, 40),
+          anchor: N.Point(20, 20),
+        },
+        htmlMarker3 = {
+          content:
+            '<div style="cursor:pointer;width:40px;height:40px;line-height:42px;font-size:10px;color:white;text-align:center;font-weight:bold;background:url(./img/cluster-marker-3.png);background-size:contain;"></div>',
+          size: N.Size(40, 40),
+          anchor: N.Point(20, 20),
+        },
+        htmlMarker4 = {
+          content:
+            '<div style="cursor:pointer;width:40px;height:40px;line-height:42px;font-size:10px;color:white;text-align:center;font-weight:bold;background:url(./img/cluster-marker-4.png);background-size:contain;"></div>',
+          size: N.Size(40, 40),
+          anchor: N.Point(20, 20),
+        },
+        htmlMarker5 = {
+          content:
+            '<div style="cursor:pointer;width:40px;height:40px;line-height:42px;font-size:10px;color:white;text-align:center;font-weight:bold;background:url(./img/cluster-marker-5.png);background-size:contain;"></div>',
+          size: N.Size(40, 40),
+          anchor: N.Point(20, 20),
+        };
+
+      const markerClustering = new MarkerClustering({
+        minClusterSize: 2,
+        maxZoom: 13,
+        map: map,
+        markers: markers,
+        disableClickZoom: false,
+        gridSize: 120,
+        icons: [
+          htmlMarker1,
+          htmlMarker2,
+          htmlMarker3,
+          htmlMarker4,
+          htmlMarker5,
+        ],
+        indexGenerator: [10, 100, 200, 500, 1000],
+        stylingFunction: function (clusterMarker, count) {
+          const div = clusterMarker
+            .getElement()
+            .querySelector("div:first-child");
+          div.textContent = count;
+        },
+      });
 
       // ################################
       // 현재 위치로 이동
@@ -127,35 +183,34 @@
       });
 
       // map 바뀌면 실행: 눌러서 이동하거나 크기 조절했을때
-      naver.maps.Event.addListener(map, "idle", function () {
-        updateMarkers(map, markers);
-      });
-      function updateMarkers(map, markers) {
-        const mapBounds = map.getBounds();
-        let marker;
-        let position;
+      // 221016 클러스터링 넣어서 아래 주석처리
+      // naver.maps.Event.addListener(map, "idle", function () {
+      //   updateMarkers(map, markers);
+      // });
+      // function updateMarkers(map, markers) {
+      //   const mapBounds = map.getBounds();
+      //   let marker;
+      //   let position;
 
-        for (let i = 0; i < markers.length; i++) {
-          marker = markers[i];
-          position = marker.getPosition();
+      //   for (let i = 0; i < markers.length; i++) {
+      //     marker = markers[i];
+      //     position = marker.getPosition();
 
-          if (mapBounds.hasLatLng(position)) {
-            showMarker(map, marker);
-          } else {
-            hideMarker(map, marker);
-          }
-        }
-      }
-
-      function showMarker(map, marker) {
-        if (marker.getMap()) return;
-        marker.setMap(map);
-      }
-
-      function hideMarker(map, marker) {
-        if (!marker.getMap()) return;
-        marker.setMap(null);
-      }
+      //     if (mapBounds.hasLatLng(position)) {
+      //       showMarker(map, marker);
+      //     } else {
+      //       hideMarker(map, marker);
+      //     }
+      //   }
+      // }
+      // function showMarker(map, marker) {
+      //   if (marker.getMap()) return;
+      //   marker.setMap(map);
+      // }
+      // function hideMarker(map, marker) {
+      //   if (!marker.getMap()) return;
+      //   marker.setMap(null);
+      // }
 
       // ################################
       // 앱으로부터 데이터 받아오기
@@ -168,7 +223,8 @@
               duration: objData.duration,
             },
           );
-          const marker = new naver.maps.Marker({
+          currentMarker?.setVisible(false);
+          currentMarker = new naver.maps.Marker({
             position: new naver.maps.LatLng(
               objData.latitude,
               objData.longitude,
@@ -177,6 +233,14 @@
           });
         }
       });
+
+      // ################################
+      // 앱으로 보내기
+      function closeModal() {
+        if (window.ReactNativeWebView) {
+          window.ReactNativeWebView.postMessage("closeModal");
+        }
+      }
     </script>
   </body>
 </html>
